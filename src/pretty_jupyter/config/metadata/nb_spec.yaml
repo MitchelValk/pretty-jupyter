@@ -53,6 +53,12 @@ output:
         theme:
           type: string
         include_plotlyjs:
+          type: [boolean, string]
+          allowed:
+            - true
+            - false
+            - auto
+        self_contained:
           type: boolean
     pdf:
       type: dict

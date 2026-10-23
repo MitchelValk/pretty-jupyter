@@ -34,3 +34,12 @@ Changelog
 2.0.2
 ~~~~~~~
 - Improved styles for small screens.
+
+2.1.0
+~~~~~~~
+- Removed the dependency on ``pkg_resources`` (removed from recent setuptools); package files are located relative to the package instead.
+- Supports nbconvert 7 in addition to nbconvert 6. Supported Python versions are now 3.8 - 3.13.
+- Much smaller html output: bundled libraries are inlined as text instead of base64 data URIs, only the jQuery UI widget factory (needed by the TOC) is included instead of all of jQuery UI, and plotly.js is only included when the notebook uses it (``include_plotlyjs: auto``, the new default). A typical report goes from ~5.7 MB to ~0.35 MB.
+- Added ``output.html.self_contained`` option. When false, jQuery, Bootstrap and plotly.js are loaded from a CDN with subresource integrity hashes.
+- Notebooks without cells and empty raw metadata cells no longer crash the export; a non-YAML first raw cell gives a clear error.
+- ``pretty-jupyter quickstart`` copies the notebook byte for byte (fixes encoding issues on Windows).

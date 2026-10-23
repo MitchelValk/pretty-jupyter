@@ -111,6 +111,21 @@ Notebook-Level
         - | Specifies visual (bootstrap) theme
           | of the output html page.
     *
+        - output.html.include_plotlyjs
+        - true, false or auto, default: auto
+        - | Whether plotly.js (~3.7 MB) is
+          | embedded in the page. **auto**
+          | embeds it only if an output
+          | references plotly.
+    *
+        - output.html.self_contained
+        - boolean, default: true
+        - | If **false**, jQuery, Bootstrap and
+          | plotly.js are loaded from a CDN
+          | (with integrity hashes) instead of
+          | being embedded. The report then
+          | needs internet access to render.
+    *
         - output.pdf.toc
         - boolean, default: true
         - | If true, then TOC

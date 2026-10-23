@@ -4,7 +4,6 @@ ipynb look more pretty.
 
 """
 
-
 import re
 
 from nbconvert.preprocessors import Preprocessor
@@ -57,7 +56,7 @@ class TokenCleaningPreprocessor(Preprocessor):
     def preprocess_cell(self, cell, resources, index):
         if cell.cell_type == "code":
             for i, output in enumerate(cell.outputs):
-                if not "data" in output:
+                if "data" not in output:
                     continue
 
                 output_data = output["data"]
@@ -73,6 +72,8 @@ class TokenCleaningPreprocessor(Preprocessor):
                 if cell_format is None:
                     continue
 
-                output_data[f] = re.sub(pattern=HTML_TOKEN_REGEX, repl="", string=output_data[f])
+                output_data[cell_format] = re.sub(
+                    pattern=HTML_TOKEN_REGEX, repl="", string=output_data[cell_format]
+                )
 
         return cell, resources

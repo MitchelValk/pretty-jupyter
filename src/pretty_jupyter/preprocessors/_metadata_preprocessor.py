@@ -1,22 +1,26 @@
+import base64
 import copy
+import hashlib
 import warnings
 from datetime import date, datetime
 from pathlib import Path
 
 import jinja2
 import nbconvert
-import pkg_resources
 import yaml
 from cerberus import Validator
 from nbconvert.preprocessors import Preprocessor
 from packaging import version
 from traitlets import Dict
 
+from pretty_jupyter._resources import resource_path
 from pretty_jupyter.constants import (
     AVAILABLE_THEMES,
+    CDN_ASSETS,
     CONFIG_DIR,
     DEPRECATED_METADATA_MSG_FORMAT,
     METADATA_ERROR_FORMAT,
+    PLOTLY_MIMETYPE,
 )
 from pretty_jupyter.magics import is_jinja_cell
 from pretty_jupyter.tokens import read_code_metadata_token, read_markdown_metadata_token
@@ -77,7 +81,14 @@ class NbMetadataPreprocessor(Preprocessor):
 
         # temporarily store nb metadata to resources to be accessible in cell
         resources["__pj_metadata"] = nb.metadata.get("pj_metadata", {})
-        return super().preprocess(nb, resources)
+        nb, resources = super().preprocess(nb, resources)
+
+        # a notebook without cells never reaches the first-cell hook in preprocess_cell,
+        # but the templates still need the merged metadata
+        if "pj_metadata" not in resources:
+            self._synchronize_notebook_metadata(None, resources)
+
+        return nb, resources
 
     def preprocess_cell(self, cell, resources, index):
         """
@@ -100,15 +111,23 @@ class NbMetadataPreprocessor(Preprocessor):
         return cell, resources
 
     def _synchronize_notebook_metadata(self, cell, resources):
-        nb_metadata = resources.get("__pj_metadata", {})
+        nb_metadata = resources.get("__pj_metadata", {}) or {}
         src_metadata = {}
-        if cell.cell_type == "raw":
+        if cell is not None and cell.cell_type == "raw":
             try:
                 src_metadata = yaml.safe_load(cell.source)
             except Exception as exc:
                 raise ValueError(
                     "An error happend when trying to parse first cell of the notebook with type raw.",
                     exc,
+                )
+            # an empty raw cell parses to None
+            if src_metadata is None:
+                src_metadata = {}
+            if not isinstance(src_metadata, dict):
+                raise ValueError(
+                    "The first raw cell of the notebook is interpreted as YAML notebook metadata, "
+                    f"but it does not contain a YAML mapping (got {type(src_metadata).__name__})."
                 )
 
             remove_cell_input(cell)
@@ -144,7 +163,7 @@ class NbMetadataPreprocessor(Preprocessor):
 
         resources["pj_metadata"] = metadata
 
-        del resources["__pj_metadata"]
+        resources.pop("__pj_metadata", None)
 
     def _synchronize_cell_metadata(self, cell):
         """
@@ -204,12 +223,69 @@ class NbMetadataPreprocessor(Preprocessor):
 class HtmlNbMetadataPreprocessor(NbMetadataPreprocessor):
     def preprocess(self, nb, resources):
         resources["pj_available_themes"] = AVAILABLE_THEMES
-        return super().preprocess(nb, resources)
+        nb, resources = super().preprocess(nb, resources)
+
+        html_metadata = resources["pj_metadata"]["output"]["html"]
+
+        # resolve include_plotlyjs: "auto" => only when the (already filtered) notebook needs it
+        include_plotlyjs = html_metadata.get("include_plotlyjs", "auto")
+        if include_plotlyjs == "auto":
+            include_plotlyjs = notebook_uses_plotly(nb)
+        resources["pj_include_plotlyjs"] = bool(include_plotlyjs)
+
+        # libraries that are loaded from a CDN instead of being inlined
+        resources["pj_cdn_assets"] = (
+            {} if html_metadata.get("self_contained", True) else get_cdn_assets()
+        )
+
+        return nb, resources
 
     def _preprocess_code_cell(self, cell, resources, index):
         cell.metadata["pj_metadata"]["input_fold"] = get_code_folding_value(cell, resources)
 
         return super()._preprocess_code_cell(cell, resources, index)
+
+
+def notebook_uses_plotly(nb) -> bool:
+    """
+    Returns True if any (remaining) cell output or raw HTML in markdown references plotly.
+
+    The check is deliberately generous: including plotly.js unnecessarily only costs file size,
+    while leaving it out breaks the figures.
+    """
+    for cell in nb.cells:
+        if cell.cell_type == "markdown":
+            source = cell.source.lower()
+            if "<script" in source and "plotly" in source:
+                return True
+        for output in cell.get("outputs", []):
+            data = output.get("data", {})
+            if PLOTLY_MIMETYPE in data:
+                return True
+            for mimetype, value in data.items():
+                # plain-text reprs and images can't render a figure
+                if mimetype == "text/plain" or mimetype.startswith("image/"):
+                    continue
+                if isinstance(value, list):
+                    value = "".join(value)
+                if isinstance(value, str) and "plotly" in value.lower():
+                    return True
+    return False
+
+
+def get_cdn_assets() -> dict:
+    """
+    Returns ``{template path: {"url": ..., "integrity": ...}}`` for the bundled libraries in
+    ``CDN_ASSETS``. The SRI hash is computed from the bundled file, so the browser refuses to run
+    a CDN copy that differs from what this package ships.
+    """
+    assets = {}
+    for path, url in CDN_ASSETS.items():
+        with open(resource_path("templates", "pj", *path.split("/")), "rb") as file:
+            digest = hashlib.sha384(file.read()).digest()
+        integrity = "sha384-" + base64.b64encode(digest).decode("ascii")
+        assets[path] = {"url": url, "integrity": integrity}
+    return assets
 
 
 def remove_cell_input(cell):

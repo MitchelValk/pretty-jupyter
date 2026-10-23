@@ -17,7 +17,8 @@ output:
     code_tools: false
     tabset: true
     theme: paper
-    include_plotlyjs: true
+    include_plotlyjs: auto
+    self_contained: true
   pdf:
     toc: true
     toc_depth: 3

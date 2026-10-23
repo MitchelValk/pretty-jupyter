@@ -1,22 +1,26 @@
 import os
 from pathlib import Path
 
-import pkg_resources
 import pytest
 import selenium.webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.utils import ChromeType
+
+from pretty_jupyter._resources import resource_path
 
 
 @pytest.fixture()
 def driver():
-    chrome_service = Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install())
+    # Selenium (>=4.11) locates/downloads a matching driver by itself. CHROME_BIN and
+    # CHROMEDRIVER can point to a specific browser/driver when that is not possible.
+    chromedriver = os.environ.get("CHROMEDRIVER")
+    chrome_service = Service(chromedriver) if chromedriver else Service()
 
     chrome_options = Options()
+    if os.environ.get("CHROME_BIN"):
+        chrome_options.binary_location = os.environ["CHROME_BIN"]
     options = [
-        "--headless",
+        "--headless=new",
         "--disable-gpu",
         "--window-size=1920,1080",
         "--ignore-certificate-errors",
@@ -31,7 +35,7 @@ def driver():
 
     yield driver
 
-    driver.close()
+    driver.quit()
 
 
 @pytest.fixture
@@ -41,7 +45,7 @@ def fixture_dir():
 
 @pytest.fixture
 def templates_path():
-    return str(Path(pkg_resources.resource_filename("pretty_jupyter", "templates")).as_posix())
+    return str(Path(resource_path("templates")).as_posix())
 
 
 @pytest.fixture

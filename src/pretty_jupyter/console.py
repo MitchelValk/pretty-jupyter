@@ -4,21 +4,20 @@ import sys
 from pathlib import Path
 
 import click
-import pkg_resources
 from nbconvert.exporters import HTMLExporter, LatexExporter, PDFExporter
 from traitlets.config import Config
+
+from pretty_jupyter._resources import resource_path
 
 
 @click.command()
 @click.argument("out_path", type=click.Path())
 def quickstart(out_path):
-    in_path = pkg_resources.resource_filename(
-        "pretty_jupyter", os.path.join("quickstart", "empty.ipynb")
-    )
-
-    with open(in_path, "r") as file_r, open(out_path, "w") as file_w:
-        in_text = file_r.read()
-        file_w.write(in_text)
+    """
+    Creates a basic notebook with Pretty Jupyter elements at OUT_PATH.
+    """
+    # copy bytes as-is so the notebook's encoding/newlines are preserved on every platform
+    shutil.copyfile(resource_path("quickstart", "empty.ipynb"), out_path)
 
 
 @click.command("nbconvert-dev")
@@ -38,9 +37,7 @@ def nbconvert_dev(input, to, out, include_input):
 
     config = Config()
     config.TemplateExporter.template_name = template_map[to]
-    config.TemplateExporter.extra_template_basedirs = [
-        pkg_resources.resource_filename("pretty_jupyter", "templates")
-    ]
+    config.TemplateExporter.extra_template_basedirs = [resource_path("templates")]
     config.TemplateExporter.exclude_input = not include_input
 
     if to == "html":
@@ -56,12 +53,13 @@ def nbconvert_dev(input, to, out, include_input):
         res = exporter.from_file(file)
     output_data = res[0]
 
-    # open file as bytes if the output data are bytes, otherwise opne it as a string
-    file = open(out, "wb") if isinstance(output_data, bytes) else open(out, "w", encoding="utf-8")
-    try:
-        file.write(output_data)
-    finally:
-        file.close()
+    # write bytes as-is (pdf), otherwise write text as utf-8
+    if isinstance(output_data, bytes):
+        with open(out, "wb") as file:
+            file.write(output_data)
+    else:
+        with open(out, "w", encoding="utf-8") as file:
+            file.write(output_data)
 
 
 @click.command("install-dev")
@@ -72,9 +70,7 @@ def install_dev():
     src_templates = ["pj", "pj-pdf", "pj-legacy"]
 
     for src_template in src_templates:
-        src_folder = os.path.join(
-            pkg_resources.resource_filename("pretty_jupyter", "templates"), src_template
-        )
+        src_folder = resource_path("templates", src_template)
         target_folder = os.path.join(
             sys.prefix, f"share/jupyter/nbconvert/templates/{src_template}"
         )

@@ -3,6 +3,21 @@
 {% from 'mathjax.html.j2' import mathjax %}
 {% from 'celltags.j2' import celltags %}
 
+{#
+  Includes a bundled javascript library. Libraries are inlined as plain <script> text
+  (smaller than the base64 data URIs used before). If self_contained is false and the
+  library is available on a CDN, a <script src> with a subresource integrity hash is emitted.
+#}
+{#- `resources` is passed explicitly: depending on the nbconvert version, macros don't see the render context -#}
+{%- macro pj_script(resources, path) -%}
+  {%- set cdn_assets = resources.get("pj_cdn_assets", {}) -%}
+  {%- if path in cdn_assets -%}
+  <script src="{{ cdn_assets[path].url }}" integrity="{{ cdn_assets[path].integrity }}" crossorigin="anonymous"></script>
+  {%- else -%}
+  {{ resources.include_js(path) }}
+  {%- endif -%}
+{%- endmacro -%}
+
 {%- block header -%}
 
 {% set title = resources["pj_metadata"]["title"] %}
@@ -25,7 +40,7 @@
   <title>{{ title | e }}</title>
 
   <!-- jquery -->
-  <script src="{{ resources.include_url('static/libs/jquery.min.js') }}"></script>
+  {{ pj_script(resources, 'static/libs/jquery.min.js') }}
 
   <!-- notebook theme (bootstrap 3) -->
   {%- block theme_css -%}
@@ -33,26 +48,26 @@
   {% set available_themes = resources.pj_available_themes %}
   {% set theme = html_metadata["theme"] %}
   {%- if theme in available_themes -%}
-  <link href="{{ resources.include_url('static/themes/{}.css'.format(theme)) | e }}" rel="stylesheet" />
+  {{ resources.include_css('static/themes/{}.css'.format(theme)) }}
   {%- else -%}
   <link href="{{ theme | e }}" rel="stylesheet" />
   {%- endif -%}
   {%- endblock theme_css %}
   <!-- bootstrap 3 -->
-  <script src="{{ resources.include_url('static/libs/bootstrap.min.js') }}"></script>
-  <!-- jquery-ui -->
-  <script src="{{ resources.include_url('static/libs/jquery-ui.min.js') }}"></script>
+  {{ pj_script(resources, 'static/libs/bootstrap.min.js') }}
+  <!-- jquery-ui widget factory (required by tocify) -->
+  {{ pj_script(resources, 'static/libs/jquery-ui.widget.min.js') }}
 
   <!-- jquery tocify -->
   {% if resources.pj_metadata.output.html.toc -%}
-  <script src="{{ resources.include_url('static/libs/jquery.tocify.js') }}"></script>
-  <link href="{{ resources.include_url('static/libs/jquery.tocify.css') }}" rel="stylesheet" />
+  {{ pj_script(resources, 'static/libs/jquery.tocify.js') }}
+  {{ resources.include_css('static/libs/jquery.tocify.css') }}
   {{ resources.include_css("static/pj-toc.css") }}
   {%- endif %}
 
   <!-- jQuery Plugin: Sticky Tabs -->
   {% if resources.pj_metadata.output.html.tabset %}
-  <script src="{{ resources.include_url('static/libs/jquery.stickytabs.js') }}" ></script>
+  {{ pj_script(resources, 'static/libs/jquery.stickytabs.js') }}
   {{ resources.include_css("static/pj-tabset.css") }}
   {% endif%}
 
@@ -60,11 +75,12 @@
   {{ mathjax("https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe") }}
   
   <!-- plotly -->
-  {% if resources.pj_metadata.output.html.include_plotlyjs %}
-    <script src="{{ resources.include_url('static/libs/plotly.min.js') }}" ></script>
+  {# pj_include_plotlyjs resolves include_plotlyjs: auto (see HtmlNbMetadataPreprocessor) #}
+  {% if resources.get("pj_include_plotlyjs", resources.pj_metadata.output.html.include_plotlyjs) %}
+    {{ pj_script(resources, 'static/libs/plotly.min.js') }}
   {% endif %}
   <!-- require -->
-  <script src="{{ resources.include_url('static/libs/require.min.js') }}"></script>
+  {{ pj_script(resources, 'static/libs/require.min.js') }}
 
   {# css files for notebooks: extend this to provide custom styles #}
   {% block notebook_css %}
