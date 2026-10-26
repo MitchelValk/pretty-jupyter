@@ -167,7 +167,7 @@
   {% block notebook_js %}
     <!-- hotfix to support interactive tables package  -->
     <script type="text/javascript">
-      if ($(".output_subarea.output_javascript").length > 0) {
+      if (jQuery(".output_subarea.output_javascript").length > 0) {
         jQuery.noConflict(false);
       }
     </script>
@@ -177,7 +177,8 @@
     <script type="text/javascript">
       {% set html_metadata = resources.pj_metadata.output.html %}
 
-      $(document).ready(function() {
+      // `$` is bound to pretty-jupyter's jQuery: notebook outputs (e.g. itables) may replace the global `$`
+      jQuery(function($) {
         window.fixElementIds();
 
         // remove useless anchor from Jupyter

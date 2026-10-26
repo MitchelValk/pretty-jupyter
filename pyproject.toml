@@ -56,6 +56,7 @@ test = [
     "selenium>=4.11",
     "pandas",
     "plotly",
+    "itables",
     "ipykernel"
 ]
 dev = [

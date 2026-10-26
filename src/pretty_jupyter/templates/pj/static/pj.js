@@ -1,5 +1,9 @@
 /* a lot of this code was taken from rmd styles directly included in the output html page, license was not present there but it is GPL3 */
 
+// Everything runs against the jQuery bundled with pretty-jupyter, even if a notebook output
+// (e.g. itables in offline mode) later replaces the global `$` with another jQuery version.
+(function ($) {
+
 MAX_HEADERS = 10;
 
 // nextUntilWithTextNodes does the same as nextUntil but it doesn't ignore text nodes
@@ -291,3 +295,7 @@ window.initializeTabsets = function () {
     $(this).parent().toggleClass('nav-tabs-open')
   });
 };
+
+// keep the helper reachable the same way as before it was wrapped
+window.processToken = processToken;
+})(jQuery);
