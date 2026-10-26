@@ -18,6 +18,7 @@ from pretty_jupyter.constants import (
     AVAILABLE_THEMES,
     CDN_ASSETS,
     CONFIG_DIR,
+    DARK_THEMES,
     DEPRECATED_METADATA_MSG_FORMAT,
     METADATA_ERROR_FORMAT,
     PLOTLY_MIMETYPE,
@@ -223,6 +224,7 @@ class NbMetadataPreprocessor(Preprocessor):
 class HtmlNbMetadataPreprocessor(NbMetadataPreprocessor):
     def preprocess(self, nb, resources):
         resources["pj_available_themes"] = AVAILABLE_THEMES
+        resources["pj_dark_themes"] = DARK_THEMES
         nb, resources = super().preprocess(nb, resources)
 
         html_metadata = resources["pj_metadata"]["output"]["html"]

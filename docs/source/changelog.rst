@@ -43,4 +43,5 @@ Changelog
 - Added ``output.html.self_contained`` option. When false, jQuery, Bootstrap and plotly.js are loaded from a CDN with subresource integrity hashes.
 - Notebooks without cells and empty raw metadata cells no longer crash the export; a non-YAML first raw cell gives a clear error.
 - Fixed the TOC and sections breaking when a notebook output (e.g. itables in offline mode) replaces the global ``$`` with another jQuery version.
+- The page tells notebook outputs whether its theme is light or dark (``data-jp-theme-light``), so itables no longer switches to dark styling on light themes when the OS is in dark mode.
 - ``pretty-jupyter quickstart`` copies the notebook byte for byte (fixes encoding issues on Windows).

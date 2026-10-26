@@ -97,7 +97,17 @@
 {%- endblock header -%}
 
 {%- block body_header -%}
+{#
+  data-jp-theme-light is the JupyterLab convention for "is the page light or dark". Outputs such as
+  itables read it; without it they follow the OS dark mode and e.g. render light text on the light
+  bootstrap themes. Custom theme URLs are left alone because we can't tell whether they are dark.
+#}
+{%- set pj_theme = resources["pj_metadata"]["output"]["html"]["theme"] -%}
+{%- if pj_theme in resources.get("pj_available_themes", []) -%}
+<body data-jp-theme-light="{{ 'false' if pj_theme in resources.get('pj_dark_themes', []) else 'true' }}">
+{%- else -%}
 <body>
+{%- endif -%}
   <div class="container-fluid main-container">
     {% block main_container_start %}{% endblock main_container_start %}
 {%- endblock body_header -%}

@@ -98,3 +98,18 @@ def test_notebook_uses_plotly():
     assert not notebook_uses_plotly(_nb_with_output({"text/plain": "<plotly Figure>"}))
     assert not notebook_uses_plotly(_nb_with_output({"text/html": "<b>hi</b>"}))
     assert not notebook_uses_plotly(new_notebook(cells=[new_markdown_cell("We use plotly.")]))
+
+
+@pytest.mark.parametrize("theme,light", [("paper", "true"), ("darkly", "false")])
+def test_body_declares_light_or_dark_theme(theme, light):
+    # outputs like itables follow data-jp-theme-light instead of the OS dark mode setting
+    nb = new_notebook(cells=[new_raw_cell(f"output:\n  html:\n    theme: {theme}\n")])
+    assert f'<body data-jp-theme-light="{light}">' in _export_html(nb)
+
+
+def test_body_custom_theme_url_has_no_theme_flag():
+    nb = new_notebook(
+        cells=[new_raw_cell("output:\n  html:\n    theme: https://example.com/t.css\n")]
+    )
+    html = _export_html(nb)
+    assert "<body>" in html and "data-jp-theme-light" not in html

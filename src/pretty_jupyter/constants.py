@@ -68,6 +68,12 @@ AVAILABLE_THEMES = [
 List of all available local themes that can be specified in the `theme` html metadata.
 """
 
+DARK_THEMES = ["cyborg", "darkly", "slate", "superhero"]
+"""
+Local themes with a dark background. Used to tell notebook outputs (e.g. itables) whether the page
+is light or dark, instead of them guessing from the operating system's dark mode setting.
+"""
+
 CDN_ASSETS = {
     "static/libs/jquery.min.js": "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js",
     "static/libs/bootstrap.min.js": "https://cdn.jsdelivr.net/npm/bootstrap@3.3.5/dist/js/bootstrap.min.js",
