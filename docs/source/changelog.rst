@@ -45,3 +45,8 @@ Changelog
 - Fixed the TOC and sections breaking when a notebook output (e.g. itables in offline mode) replaces the global ``$`` with another jQuery version.
 - The page tells notebook outputs whether its theme is light or dark (``data-jp-theme-light``), so itables no longer switches to dark styling on light themes when the OS is in dark mode.
 - ``pretty-jupyter quickstart`` copies the notebook byte for byte (fixes encoding issues on Windows).
+
+2.2.0
+~~~~~~~
+- Plotly figures shown with ``fig.show()`` are now interactive in the html output. When a notebook is executed by nbconvert (or with recent plotly versions) the figure is only stored as plotly JSON, which was rendered as a static image or not at all.
+- plotly.js now comes from the installed ``plotly`` package, so it always matches the version that produced the figures (plotly 6+ encodes data in a format older plotly.js can't read). The bundled fallback, used when plotly isn't installed, was updated from 2.13.3 to 4.1.1.

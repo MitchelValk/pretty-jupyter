@@ -113,15 +113,17 @@ Notebook-Level
     *
         - output.html.include_plotlyjs
         - true, false or auto, default: auto
-        - | Whether plotly.js (~3.7 MB) is
+        - | Whether plotly.js (~5 MB) is
           | embedded in the page. **auto**
           | embeds it only if an output
-          | references plotly.
+          | references plotly. The plotly.js
+          | of the installed plotly package
+          | is used, so it matches your figures.
     *
         - output.html.self_contained
         - boolean, default: true
         - | If **false**, jQuery, Bootstrap and
-          | plotly.js are loaded from a CDN
+          | plotly.js are loaded from jsDelivr
           | (with integrity hashes) instead of
           | being embedded. The report then
           | needs internet access to render.

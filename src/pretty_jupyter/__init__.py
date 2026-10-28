@@ -4,6 +4,7 @@ from pretty_jupyter.magics import JinjaMagics
 from pretty_jupyter.preprocessors import (
     HtmlNbMetadataPreprocessor,
     NbMetadataPreprocessor,
+    PlotlyPreprocessor,
     TokenCleaningPreprocessor,
     TokenPreprocessor,
 )

@@ -8,6 +8,10 @@
       "type": "pretty_jupyter.HtmlNbMetadataPreprocessor",
       "enabled": true
     },
+    "150-plotly": {
+      "type": "pretty_jupyter.PlotlyPreprocessor",
+      "enabled": true
+    },
     "200-pygments": {
       "type": "nbconvert.preprocessors.CSSHTMLHeaderPreprocessor",
       "enabled": true,

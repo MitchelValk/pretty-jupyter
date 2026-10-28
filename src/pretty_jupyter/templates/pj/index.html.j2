@@ -77,7 +77,11 @@
   <!-- plotly -->
   {# pj_include_plotlyjs resolves include_plotlyjs: auto (see HtmlNbMetadataPreprocessor) #}
   {% if resources.get("pj_include_plotlyjs", resources.pj_metadata.output.html.include_plotlyjs) %}
+    {% if resources.get("pj_plotlyjs_tag") %}
+    {{ resources["pj_plotlyjs_tag"] }}
+    {% else %}
     {{ pj_script(resources, 'static/libs/plotly.min.js') }}
+    {% endif %}
   {% endif %}
   <!-- require -->
   {{ pj_script(resources, 'static/libs/require.min.js') }}

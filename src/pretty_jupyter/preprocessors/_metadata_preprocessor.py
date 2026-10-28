@@ -13,6 +13,7 @@ from nbconvert.preprocessors import Preprocessor
 from packaging import version
 from traitlets import Dict
 
+from pretty_jupyter._plotly import plotlyjs_script_tag
 from pretty_jupyter._resources import resource_path
 from pretty_jupyter.constants import (
     AVAILABLE_THEMES,
@@ -236,9 +237,11 @@ class HtmlNbMetadataPreprocessor(NbMetadataPreprocessor):
         resources["pj_include_plotlyjs"] = bool(include_plotlyjs)
 
         # libraries that are loaded from a CDN instead of being inlined
-        resources["pj_cdn_assets"] = (
-            {} if html_metadata.get("self_contained", True) else get_cdn_assets()
-        )
+        self_contained = html_metadata.get("self_contained", True)
+        resources["pj_cdn_assets"] = {} if self_contained else get_cdn_assets()
+        # plotly.js matching the installed plotly package (or the bundled fallback)
+        if resources["pj_include_plotlyjs"]:
+            resources["pj_plotlyjs_tag"] = plotlyjs_script_tag(self_contained=self_contained)
 
         return nb, resources
 

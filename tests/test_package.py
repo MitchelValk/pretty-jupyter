@@ -113,3 +113,44 @@ def test_body_custom_theme_url_has_no_theme_flag():
     )
     html = _export_html(nb)
     assert "<body>" in html and "data-jp-theme-light" not in html
+
+
+def test_plotly_figure_output_becomes_interactive_html():
+    figure = {"data": [{"type": "scatter", "y": [1, 3, 2], "name": "</script><!--"}], "layout": {}}
+    svg = "<svg><text>static</text></svg>"
+    nb = _nb_with_output({"application/vnd.plotly.v1+json": figure, "image/svg+xml": svg})
+    html = _export_html(nb)
+    assert "Plotly.newPlot" in html
+    assert "<text>static</text>" not in html, "html should win over the static svg"
+    # figure JSON must not be able to break out of the <script> block
+    assert "</script><!--" not in html
+
+
+def test_existing_plotly_html_is_kept():
+    custom = '<div id="mine"></div><script>Plotly.newPlot("mine", [])</script>'
+    nb = _nb_with_output({"application/vnd.plotly.v1+json": {"data": []}, "text/html": custom})
+    html = _export_html(nb)
+    assert custom in html
+    assert "pj-plotly-" not in html
+
+
+def test_plotlyjs_falls_back_to_bundled_copy(monkeypatch):
+    import importlib.util
+
+    from pretty_jupyter import _plotly
+
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: None)
+    path, version = _plotly.find_plotlyjs()
+    assert path == _plotly.BUNDLED_PLOTLYJS
+    assert version is not None
+
+
+def test_plotlyjs_unsafe_source_is_base64_encoded(monkeypatch, tmp_path):
+    from pretty_jupyter import _plotly
+
+    js = tmp_path / "plotly.min.js"
+    js.write_text("/* plotly.js v9.9.9 */ var s = '</script>';", encoding="utf-8")
+    monkeypatch.setattr(_plotly, "find_plotlyjs", lambda: (js, "9.9.9"))
+    tag = _plotly.plotlyjs_script_tag()
+    assert tag.startswith('<script src="data:text/javascript;base64,')
+    assert "</script>'" not in tag

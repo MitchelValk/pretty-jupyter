@@ -3,6 +3,7 @@ itables in offline mode replaces the global `$` with its own jQuery. Pretty Jupy
 working (TOC, sections) regardless of when that happens. Including plotly.js changes the timing
 and used to reliably break the TOC.
 """
+
 import subprocess
 import sys
 import time

@@ -77,13 +77,12 @@ is light or dark, instead of them guessing from the operating system's dark mode
 CDN_ASSETS = {
     "static/libs/jquery.min.js": "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js",
     "static/libs/bootstrap.min.js": "https://cdn.jsdelivr.net/npm/bootstrap@3.3.5/dist/js/bootstrap.min.js",
-    "static/libs/plotly.min.js": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.13.3/plotly.min.js",
 }
 """
 Bundled libraries that can be loaded from a CDN when ``output.html.self_contained`` is false.
 Only files that are byte-identical to the published npm packages are listed, so the subresource
 integrity hash computed from the bundled copy also matches the CDN copy. Everything else
-(themes, tocify, pj.js, ...) is always inlined.
+(themes, tocify, pj.js, ...) is always inlined. plotly.js is handled separately, see ``_plotly.py``.
 """
 
 PLOTLY_MIMETYPE = "application/vnd.plotly.v1+json"
